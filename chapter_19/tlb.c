@@ -1,10 +1,5 @@
 /*
  * Measure the size and cost of accessing a TLB
- * args:
- *   int pages, the number of pages to touch
- *   int trials, the number of trials to run
- * returns:
- *   the average time to access an array element in a page
  */
 
 #define _GNU_SOURCE 
@@ -18,7 +13,6 @@
 
 #define SAMPLES 0x09000000
 #define BASE_10 10
-/* #define UINT64_MAX 10 */
 
 double run_trials(int page_size, int num_pages, int trials);
 
