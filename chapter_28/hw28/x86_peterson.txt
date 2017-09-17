@@ -1,0 +1,54 @@
+ARG seed 0
+ARG numthreads 2
+ARG program peterson.s
+ARG interrupt frequency 6
+ARG interrupt randomness False
+ARG procsched 
+ARG argv 
+ARG load address 1000
+ARG memsize 128
+ARG memtrace turn,count
+ARG regtrace ax,cx
+ARG cctrace False
+ARG printstats False
+ARG verbose False
+
+
+ turn count      ax    cx          Thread 0                Thread 1         
+
+    0     0       0     0   
+    0     0       0     0   1000 lea flag, %fx
+    0     0       0     0   1001 mov %bx, %cx
+    0     0       0     0   1002 neg %cx
+    0     0       0     1   1003 add $1, %cx
+    0     0       0     1   1004 mov $1, 0(%fx,%bx,4)
+    1     0       0     1   1005 mov %cx, turn
+    1     0       0     0   ------ Interrupt ------  ------ Interrupt ------  
+    1     0       0     0                            1000 lea flag, %fx
+    1     0       0     0                            1001 mov %bx, %cx
+    1     0       0     0                            1002 neg %cx
+    1     0       0     1                            1003 add $1, %cx
+    1     0       0     1                            1004 mov $1, 0(%fx,%bx,4)
+    1     0       0     1                            1005 mov %cx, turn
+    1     0       0     1   ------ Interrupt ------  ------ Interrupt ------  
+    1     0       0     1   1006 mov 0(%fx,%cx,4), %ax
+    1     0       0     1   1007 test $1, %ax
+    1     0       0     1   1008 jne .fini
+    1     0       0     1   1012 mov count, %ax
+    1     0       1     1   1013 add $1, %ax
+    1     1       1     1   1014 mov %ax, count
+    1     1       0     1   ------ Interrupt ------  ------ Interrupt ------  
+    1     1       0     1                            1006 mov 0(%fx,%cx,4), %ax
+    1     1       0     1                            1007 test $1, %ax
+    1     1       0     1                            1008 jne .fini
+    1     1       1     1                            1012 mov count, %ax
+    1     1       2     1                            1013 add $1, %ax
+    1     2       2     1                            1014 mov %ax, count
+    1     2       1     1   ------ Interrupt ------  ------ Interrupt ------  
+    1     2       1     1   1015 mov $0, 0(%fx,%bx,4)
+    1     2       1     1   1016 mov %cx, turn
+    1     2       1     1   1017 halt
+    1     2       2     1   ----- Halt;Switch -----  ----- Halt;Switch -----  
+    1     2       2     1                            1015 mov $0, 0(%fx,%bx,4)
+    1     2       2     1                            1016 mov %cx, turn
+    1     2       2     1                            1017 halt
