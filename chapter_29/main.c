@@ -5,6 +5,7 @@
 
 #define BASE_10 10
 #define MILLION 0xf4240
+#define MAX_THREADS 20
 
 typedef struct __myargs_t {
     int loops;
@@ -42,28 +43,44 @@ void *worker(void *arg) {
 
 int main(int argc, char *argv[])
 {
-    if (argc <= 1) {
-        fprintf(stderr, "Usage: ./main <int: loops>\n");
+    if (argc <= 2) {
+        fprintf(stderr, "Usage: ./main <int: loops> <int: threads>\n");
         return 1;
     }
     
-    pthread_t t1, t2;
-    long time1, time2;
+    int loops, num_threads;
+    loops = strtol(argv[1], NULL, BASE_10);
+    num_threads = strtol(argv[2], NULL, BASE_10);
+
+    if (num_threads > MAX_THREADS) {
+        fprintf(stderr, "Let's not go crazy. Choose %d or less threads.\n", MAX_THREADS);
+        return 1;
+    }
+
+    pthread_t threads[num_threads];
+    long time[num_threads];
+    double total = 0;
+    int i;
     counter_t counter;
     counter_init(&counter);
-    int loops = strtol(argv[1], NULL, BASE_10);
     myargs_t args;
     args.loops = loops;
     args.counter = counter;
 
-    Pthread_create(&t1, NULL, worker, &args);
-    Pthread_create(&t2, NULL, worker, &args);
+    for (i = 0; i < num_threads; i++) {
+        Pthread_create(&threads[i], NULL, worker, &args);
+    }
 
-    Pthread_join(t1, (void **) &time1);
-    Pthread_join(t2, (void **) &time2);
+    for (i = 0; i < num_threads; i++) {
+        Pthread_join(threads[i], (void **) &time[i]);
+    }
 
-    printf("Two threads incrementing a locked (monitor) counter %d times each\n", loops);
-    printf("took %f seconds.\n\n", ((double) (time1 + time2)) / MILLION);
+    for (i = 0; i < num_threads; i++) {
+        total += (double) time[i];  // microseconds
+    }
+    
+    printf("%d threads incrementing a locked (monitor) counter %d times each took %f seconds.\n\n",
+            num_threads, loops, total / MILLION);
 
     return 0;
 }
