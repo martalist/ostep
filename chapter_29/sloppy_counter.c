@@ -5,14 +5,14 @@
 typedef struct __myargs_t {
     int loops;
     scounter_t counter;
+    int mytid;
 } myargs_t;
 
 void *worker(void *arg) {
     myargs_t *a = (myargs_t *) arg;
-    pthread_t tid = pthread_self();
     int i;
     for (i = 0; i < a->loops; i++) {
-        update(&a->counter, tid, 1);
+        update(&a->counter, a->mytid, 1);
     }
     return NULL;
 }
@@ -46,9 +46,7 @@ int main(int argc, char *argv[])
     int i, rc;
     scounter_t counter;
     init(&counter, threshold);
-    myargs_t args;
-    args.loops = loops;
-    args.counter = counter;
+    myargs_t args[num_threads];
     struct timeval start, end;
 
     rc = gettimeofday(&start, NULL);
@@ -58,7 +56,10 @@ int main(int argc, char *argv[])
     }
 
     for (i = 0; i < num_threads; i++) {
-        Pthread_create(&threads[i], NULL, worker, &args);
+        args[i].mytid = i;      // thread ID
+        args[i].loops = loops;
+        args[i].counter = counter;
+        Pthread_create(&threads[i], NULL, worker, &args[i]);
     }
 
     for (i = 0; i < num_threads; i++) {
