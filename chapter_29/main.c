@@ -6,14 +6,14 @@
 
 typedef struct __myargs_t {
     int loops;
-    counter_t counter;
+    counter_t *counter;
 } myargs_t;
 
 void *worker(void *arg) {
     myargs_t *a = (myargs_t *) arg;
     int i;
     for (i = 0; i < a->loops; i++) {
-        counter_inc(&a->counter);
+        counter_inc(a->counter);
     }
     return NULL;
 }
@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
     counter_init(&counter);
     myargs_t args;
     args.loops = loops;
-    args.counter = counter;
+    args.counter = &counter;
     struct timeval start, end;
 
     rc = gettimeofday(&start, NULL);
@@ -70,6 +70,8 @@ int main(int argc, char *argv[])
     
     printf("%d threads incrementing a locked (monitor) counter %d times each took %f seconds.\n\n",
             num_threads, loops, total / MILLION);
+    printf("Counter:\n\tExpected:\t%d\n\tActual: \t%d\n\n", 
+            loops * num_threads, counter_get(&counter));
 
     return 0;
 }

@@ -4,7 +4,7 @@
 
 typedef struct __myargs_t {
     int loops;
-    scounter_t counter;
+    scounter_t *counter;
     int mytid;
 } myargs_t;
 
@@ -12,7 +12,7 @@ void *worker(void *arg) {
     myargs_t *a = (myargs_t *) arg;
     int i;
     for (i = 0; i < a->loops; i++) {
-        update(&a->counter, a->mytid, 1);
+        update(a->counter, a->mytid, 1);
     }
     return NULL;
 }
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
     for (i = 0; i < num_threads; i++) {
         args[i].mytid = i;      // thread ID
         args[i].loops = loops;
-        args[i].counter = counter;
+        args[i].counter = &counter;
         Pthread_create(&threads[i], NULL, worker, &args[i]);
     }
 
@@ -76,6 +76,9 @@ int main(int argc, char *argv[])
     
     printf("%d threads incrementing a sloppy counter %d times each took %f seconds.\n\n",
             num_threads, loops, total / MILLION);
+
+    printf("Counter:\n\tExpected:\t%d\n\tActual: \t%d\n\n", 
+            loops * num_threads, get(&counter));
 
     return 0;
 
