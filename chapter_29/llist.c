@@ -94,10 +94,13 @@ int main(int argc, char *argv[])
         Pthread_join(threads[i], NULL);
     }
 
-    /* printf("Summary\n\tExpected nodes:\t%d\n\tActual nodes:\t%d\n\n", */
-            /* num_threads * loops, ll_length(&list)); */
-    printf("\nThe counter got to %d (expected %d)\n\n", 
-            counter_get(&counter), num_threads * loops);
+    int exp = num_threads * loops;
+    printf("Summary\n\tExpected nodes:\t%d\n\tActual nodes:\t%d\n\n",
+            exp, ll_length(&list));
+    printf("\nThe counter got to %d (expected %d)\n", 
+            counter_get(&counter), exp);
+    printf("The index of %d is %d (expected -1)\n\n", 
+            exp + 1, ll_indexof(&list, exp + 1));
 
     return 0;
 }

@@ -30,49 +30,45 @@ int ll_insert(llist_t *l, int key) {
     return 0;
 }
 
-int __ll_indexof_helper(node_t *n, int key, int index) {
-    // base cases
-    if (n->key == key) {
-        Pthread_mutex_unlock(&n->lock); // unlock this node's lock
-        return index;
-    }
-    if (n->next == NULL) {
-        Pthread_mutex_unlock(&n->lock); // unlock this node's lock
-        return -1;
-    }
-    // recursive call
-    Pthread_mutex_lock(&n->next->lock);
-    Pthread_mutex_unlock(&n->lock);     // unlock this node's lock
-    return __ll_indexof_helper(n->next, key, ++index);
-}
-
 int ll_indexof(llist_t *l, int key) {
-    Pthread_mutex_lock(&l->lock);   // get llist_t lock
-    if (l->head == NULL) {
-        Pthread_mutex_unlock(&l->lock); // release llist_t lock
+    Pthread_mutex_lock(&l->lock);       // get llist_t lock
+    if (l->head == NULL) {              // if the list is empty
+        Pthread_mutex_unlock(&l->lock); // release llist_t lock and exit
         return -1;
     }
     node_t *node = l->head;
-    Pthread_mutex_lock(&node->lock);   // get head lock
-    Pthread_mutex_unlock(&l->lock); // release llist_t lock
-    return __ll_indexof_helper(node, key, 0);
+    Pthread_mutex_lock(&node->lock);   // get first node lock
+    Pthread_mutex_unlock(&l->lock);    // release llist_t lock
+    int i;
+    for (i = 0; node->key != key; i++) {
+        if (!node->next) {
+            i = -1;
+            break;
+        }
+        Pthread_mutex_lock(&node->next->lock); // get next node's lock
+        Pthread_mutex_unlock(&node->lock);     // unlock this node's lock
+        node = node->next;
+    }
+    Pthread_mutex_unlock(&node->lock);  // release node lock
+    return i;
 }
 
 int ll_length(llist_t *l) {
-    int length = 0;
-    Pthread_mutex_lock(&l->lock);   // get llist_t lock
-    if (l->head == NULL) {
-        Pthread_mutex_unlock(&l->lock); // release llist_t lock
-        return length;
+    Pthread_mutex_lock(&l->lock);       // get llist_t lock
+    if (l->head == NULL) {              // if list is empty
+        Pthread_mutex_unlock(&l->lock); // release llist_t lock and exit
+        return 0;
     }
     node_t *node = l->head;
-    Pthread_mutex_lock(&node->lock);   // get head lock
-    Pthread_mutex_unlock(&l->lock); // release llist_t lock
-    while (node->next != NULL) {
-        Pthread_mutex_lock(&node->next->lock);   // get head lock
-        Pthread_mutex_unlock(&node->lock); // release llist_t lock
-        length++;
+    Pthread_mutex_lock(&node->lock);    // get first node lock
+    Pthread_mutex_unlock(&l->lock);     // release llist_t lock
+    int i = 1;
+    while (node->next) {
+        Pthread_mutex_lock(&node->next->lock);  // get next node lock
+        Pthread_mutex_unlock(&node->lock);      // release this node lock
+        i++;
+        node = node->next;
     }
     Pthread_mutex_unlock(&node->lock); // release llist_t lock
-    return length;
+    return i;
 }
