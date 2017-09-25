@@ -5,7 +5,8 @@
 
 int buffer;
 int count = 0;
-pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+pthread_cond_t empty = PTHREAD_COND_INITIALIZER;
+pthread_cond_t fill = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void put(int value) {
@@ -25,9 +26,9 @@ void *producer(void *arg) {
     for (i =0; i < *loops; i++) {
         Pthread_mutex_lock(&mutex);
         while (count == 1)
-            Pthread_cond_wait(&cond, &mutex);
+            Pthread_cond_wait(&empty, &mutex);
         put(i);
-        Pthread_cond_signal(&cond);
+        Pthread_cond_signal(&fill);
         Pthread_mutex_unlock(&mutex);
     }
     return NULL;
@@ -38,27 +39,36 @@ void *consumer(void *arg) {
     for (i =0; i < *loops; i++) {
         Pthread_mutex_lock(&mutex);
         while (count == 0) 
-            Pthread_cond_wait(&cond, &mutex);
+            Pthread_cond_wait(&fill, &mutex);
         int tmp = get();
-        Pthread_cond_signal(&cond);
+        Pthread_cond_signal(&empty);
         Pthread_mutex_unlock(&mutex);
-        printf("%d\n", tmp);
+        printf("%d, ", tmp);
     }
     return NULL;
 }
 
 int main(int argc, char *argv[]) {
-    if (argc < 2) {
-        fprintf(stderr, "Usage: ./main <int: loops>\n");
+    if (argc < 3) {
+        fprintf(stderr, "Usage: ./main <int: loops> <even int: threads>\n");
         return EXIT_FAILURE;
     }
     int loops = strtol(argv[1], NULL, 10); assert(loops > 0);
-    pthread_t t1, t2;
+    int num_threads = strtol(argv[2], NULL, 10); assert(num_threads > 0 && !(num_threads % 2));
+    int i;
+    pthread_t threads[num_threads];
 
-    Pthread_create(&t1, NULL, producer, (void*) &loops);
-    Pthread_create(&t2, NULL, consumer, (void*) &loops);
+    for (i = 0; i < num_threads; i++) {
+        if (i % 2) 
+            Pthread_create(&threads[i], NULL, consumer, (void*) &loops);
+        else
+            Pthread_create(&threads[i], NULL, producer, (void*) &loops);
+    }
 
-    Pthread_join(t1, NULL);
-    Pthread_join(t2, NULL);
+    for (i = 0; i < num_threads; i++) {
+        Pthread_join(threads[i], NULL);
+    }
+
+    printf("\n\n");
     return 0;
 }
