@@ -1,3 +1,7 @@
+/* llist_t: A threadsafe linked list that uses a hand-over-hand
+ *      (a.k.a. lock coupling) locking stragety
+ */
+
 #include "wrappers.h"
 
 typedef struct __node_t {
@@ -11,11 +15,15 @@ typedef struct __llist_t {
     pthread_mutex_t lock;
 } llist_t;
 
+/* ll_init: initialize the new list */
 void ll_init(llist_t *l) {
     Pthread_mutex_init(&l->lock, NULL);
     l->head = NULL;
 }
 
+/* ll_insert: create a new node with the value of key and 
+ *      prepend it to the front of the list
+ */
 int ll_insert(llist_t *l, int key) {
     node_t *new = malloc(sizeof(node_t));
     if (new == NULL) {    // check malloc success
@@ -30,6 +38,9 @@ int ll_insert(llist_t *l, int key) {
     return 0;
 }
 
+/* ll_indexof: find key, and return the index of the first node with 
+ *      the value key in the list. If key is not in the list, return -1.
+ */
 int ll_indexof(llist_t *l, int key) {
     Pthread_mutex_lock(&l->lock);       // get llist_t lock
     if (l->head == NULL) {              // if the list is empty
@@ -53,6 +64,7 @@ int ll_indexof(llist_t *l, int key) {
     return i;
 }
 
+/* ll_length: return the number of nodes in the list */
 int ll_length(llist_t *l) {
     Pthread_mutex_lock(&l->lock);       // get llist_t lock
     if (l->head == NULL) {              // if list is empty
