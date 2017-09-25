@@ -3,29 +3,35 @@
 #include <stdio.h>
 #include "wrappers.h"
 
-int buffer;
+#define MAX 10
+
+int buffer[MAX];
+int fill_ptr = 0;
+int use_ptr = 0;
 int count = 0;
+
 pthread_cond_t empty = PTHREAD_COND_INITIALIZER;
 pthread_cond_t fill = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void put(int value) {
-    assert(count == 0);
-    count = 1;
-    buffer = value;
+    buffer[fill_ptr] = value;
+    fill_ptr = (fill_ptr + 1) % MAX;
+    count++;
 }
 
 int get() {
-    assert(count ==1);
-    count = 0;
-    return buffer;
+    int tmp = buffer[use_ptr];
+    use_ptr = (use_ptr + 1) % MAX;
+    count--;
+    return tmp;
 }
 
 void *producer(void *arg) {
     int i, *loops = (int*) arg;
     for (i =0; i < *loops; i++) {
         Pthread_mutex_lock(&mutex);
-        while (count == 1)
+        while (count == MAX)
             Pthread_cond_wait(&empty, &mutex);
         put(i);
         Pthread_cond_signal(&fill);
