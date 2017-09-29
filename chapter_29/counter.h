@@ -36,3 +36,9 @@ int counter_inc_and_get(counter_t *c) {
     Pthread_mutex_unlock(&c->lock);
     return val;
 }
+
+void counter_reset(counter_t *c) {
+    Pthread_mutex_lock(&c->lock);
+    c->val = 0;
+    Pthread_mutex_unlock(&c->lock);
+}
