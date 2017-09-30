@@ -49,4 +49,19 @@ void *Malloc(size_t size)
     // assert(rc == 0);
 // }
 
+void Cond_init(pthread_cond_t *__restrict__ cond, const pthread_condattr_t *__restrict__ attr) {
+    int rc = pthread_cond_init(cond, attr);
+    assert(rc == 0);
+}
+
+void Cond_wait(pthread_cond_t *__restrict__ cond, pthread_mutex_t *__restrict__ mutex) {
+    int rc = pthread_cond_wait(cond, mutex);
+    assert(rc == 0);
+}
+
+void Cond_signal(pthread_cond_t *__restrict__ cond) {
+    int rc = pthread_cond_signal(cond);
+    assert(rc == 0);
+}
+
 #endif // __MYTHREADS_h__
