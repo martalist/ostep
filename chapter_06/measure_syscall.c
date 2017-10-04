@@ -38,9 +38,10 @@ int main(int argc, char *argv[])
  */
 
 /*
- * Measure the costs of a system call, by repeatedly performing a 0-byte read.
+ * Measure the costs of a system call, by repeatedly performing a nbyte-byte read.
  * @param samples, the number of measurements taken
- * @return the average time to perform the syscall in microseconds.  
+ * @param nbyte, the number of bytes to read
+ * @return the average time to perform the syscall in microseconds.
  */
 double avg_syscall_cost(int samples, size_t nbyte)
 {
@@ -78,9 +79,10 @@ double avg_syscall_cost(int samples, size_t nbyte)
 }
 
 /*
- * Measure the costs of a system call, by repeatedly performing a 0-byte read.
+ * Measure the costs of a system call, by repeatedly performing a nbyte-byte fread.
  * @param samples, the number of measurements taken
- * @return the average time to perform the syscall in microseconds.  
+ * @param nbyte, the number of bytes to read
+ * @return the average time to perform the syscall in microseconds.
  */
 double avg_syscall_cost_fopen(int samples, size_t nbyte)
 {
